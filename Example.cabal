@@ -1,0 +1,29 @@
+cabal-version:   3.0
+name:            Example
+version:         0.1.0.0
+license:         AGPL-3.0-or-later
+author:          James Hobson
+maintainer:      james@hobson.space
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall
+
+executable Example
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:    Effects
+                      Effects.Logging
+                      Effects.Chan
+                      Effects.Threads
+    other-modules:    Effects.Network
+    build-depends:    base ^>=4.16.4.0,
+                      freer-simple,
+                      time,
+                      network,
+                      network-run,
+                      optparse-applicative,
+                      stm
+    hs-source-dirs:   app
+    default-language: Haskell2010
