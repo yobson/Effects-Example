@@ -36,7 +36,11 @@ executable client
                       microlens-mtl,
                       microlens-th,
                       vty,
+                      vty-crossplatform,
                       brick,
+                      network,
+                      network-run,
+                      attoparsec,
                       text
     hs-source-dirs:   client
     ghc-options:      -threaded

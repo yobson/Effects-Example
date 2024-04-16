@@ -62,7 +62,8 @@ mainOpt :: Options -> IO ()
 mainOpt Options{..} = do
   putStrLn $ "Server started on " <> host <> ":" <> show port
   t <- newBroadcastTChanIO
-  runTCPServer (Just host) (show port) $ \s -> runM $ runThreads $ runLogger' logOpt $ runNetwork s $ runChan t runConn
+  names <- newTVarIO []
+  runTCPServer (Just host) (show port) $ \s -> runM $ runThreads $ runLogger' logOpt $ runNetwork s $ runChan names t runConn
 
 runConn :: Eff [Chan, Network, Logger, Threads, IO] ()
 runConn = do
@@ -71,18 +72,23 @@ runConn = do
   putLog Info "New Connection"
   writeMsg "Hi! What's your name?"
   name <- readMsg
+  addName name
   writeMsg $ "Welcome " <> name
+  ns <- getNames
+  writeMsg $ "Users online: " <> unwords ns
   writeMsg "Type 'quit' to exit"
   broadcast name $ "--> " <> name <> " entered chat." 
   putLog Info $ name <> " entered chat"
 
   t <- dupChan
-  reader <- forkEff $ runM $ runNetworkHandle h $ runChan t $ readLoop name
+  names <- nameHandle
+  reader <- forkEff $ runM $ runNetworkHandle h $ runChan names t $ readLoop name
 
   fix $ \loop -> do
     msg <- readMsg
     case msg of
-      "quit" -> writeMsg "Bye!"
+      "quit" -> removeName name >> writeMsg "Bye!"
+      ""     -> loop
       _      -> do
         broadcast name $ name <> ": " <> msg
         putLog Info $ name <> " wrote: " <> msg

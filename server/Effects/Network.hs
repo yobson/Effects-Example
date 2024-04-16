@@ -40,12 +40,12 @@ runNetwork sock = evalState (error "Network not initialised") . reinterpret go
   where go :: (LastMember IO es) => Network r -> Eff (State Handle : es) r
         go Initialise = do
           h <- sendM $ socketToHandle sock ReadWriteMode
-          sendM $ hSetBuffering h NoBuffering
+          sendM $ hSetBuffering h LineBuffering
           put h
           return h
         go ReadMsg = do
           h <- get
-          sendM $ init <$> hGetLine h
+          sendM $ stripLast <$> hGetLine h
         go (WriteMsg msg) = do
           h <- get
           sendM $ hPutStrLn h msg
@@ -54,7 +54,11 @@ runNetwork sock = evalState (error "Network not initialised") . reinterpret go
 runNetworkHandle :: LastMember IO es => Handle -> Eff (Network : es) a -> Eff es a
 runNetworkHandle h = interpretM go
   where go :: Network r -> IO r
-        go Initialise = hSetBuffering h NoBuffering >> return h
-        go ReadMsg = init <$> hGetLine h
+        go Initialise = hSetBuffering h LineBuffering >> return h
+        go ReadMsg = stripLast <$> hGetLine h
         go (WriteMsg msg) = hPutStrLn h msg
         go Close = hClose h
+
+
+stripLast :: String -> String
+stripLast = filter (\c -> c /= '\r' && c /= '\n')
