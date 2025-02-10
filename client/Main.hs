@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 
 module Main where
 
@@ -157,8 +157,8 @@ theMap = attrMap V.defAttr []
 
 main :: IO ()
 main = do
-  eventChan <- Brick.BChan.newBChan 10
-  msgChan <- Brick.BChan.newBChan 10
+  eventChan <- newBChan 10
+  msgChan <- newBChan 10
   let buildVty = V.mkVty V.defaultConfig
   initialVty <- buildVty
   let form = mkForm $ ConnInfo { _name = ""
@@ -239,7 +239,8 @@ tcpClient eChan mChan info sock = do
     case msg of
       PersonEntered per -> do
         writeBChan eChan (NewMsg "Server" $ T.concat ["-- ", per, " has joined --"])
-        writeBChan eChan (NewPerson per) >> loop
+        writeBChan eChan (NewPerson per)
+        loop
       Message per m     -> writeBChan eChan (NewMsg per m)  >> loop
       PersonLeft per    -> do
         writeBChan eChan (NewMsg "Server" $ T.concat ["-- ", per, " has left --"])
